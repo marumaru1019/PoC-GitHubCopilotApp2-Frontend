@@ -33,7 +33,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-            ヘルプデスク & KB
+            社内ヘルプデスク
           </CardTitle>
           <CardDescription className="text-center">
             アカウントにログインしてください
