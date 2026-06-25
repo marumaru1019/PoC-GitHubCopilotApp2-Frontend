@@ -1,8 +1,9 @@
+// Created-By: GitHub Copilot
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/protected-route';
 import Header from '@/components/header';
@@ -48,13 +49,23 @@ export default function TicketsPage() {
   const router = useRouter();
   const [status, setStatus] = useState<string>('');
   const [priority, setPriority] = useState<string>('');
-  
+  const [keyword, setKeyword] = useState<string>('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState<string>('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['tickets', status, priority],
+    queryKey: ['tickets', status, priority, debouncedKeyword],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (status) params.append('status', status);
       if (priority) params.append('priority', priority);
+      if (debouncedKeyword) params.append('q', debouncedKeyword);
       
       const response = await apiClient.get<PaginatedResponse<Ticket>>(`/api/tickets?${params}`);
       return response.data;
@@ -82,7 +93,30 @@ export default function TicketsPage() {
 
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">キーワード</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    placeholder="タイトル・説明で検索"
+                    aria-label="キーワード検索"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  {keyword && (
+                    <button
+                      type="button"
+                      onClick={() => setKeyword('')}
+                      aria-label="検索をクリア"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">ステータス</label>
                 <select

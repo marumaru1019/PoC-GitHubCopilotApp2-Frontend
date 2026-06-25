@@ -63,6 +63,28 @@ export const mockTicket: Ticket = {
   updated_at: now,
 };
 
+export const mockTicketList: Ticket[] = [
+  mockTicket,
+  {
+    ...mockTicket,
+    id: 2,
+    ticket_number: 'TKT-0002',
+    title: 'プリンター故障',
+    description: 'プリンターが動作しません。',
+    status: 'NEW',
+    priority: 'MEDIUM',
+  },
+  {
+    ...mockTicket,
+    id: 3,
+    ticket_number: 'TKT-0003',
+    title: 'ネットワーク接続不良',
+    description: 'Wi-Fi に接続できません。',
+    status: 'RESOLVED',
+    priority: 'LOW',
+  },
+];
+
 export const mockComments: Comment[] = [
   {
     id: 1,
