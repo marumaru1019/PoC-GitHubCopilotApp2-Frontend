@@ -1,6 +1,7 @@
+// Created-By: GitHub Copilot
 import { http, HttpResponse } from 'msw';
 import { CommentCreate } from '@/lib/types';
-import { mockComments, mockOperator, mockTicket } from '@/mocks/data/fixtures';
+import { mockComments, mockOperator, mockTicket, mockTicketList } from '@/mocks/data/fixtures';
 
 let currentTicket = { ...mockTicket };
 let comments = [...mockComments];
@@ -13,6 +14,32 @@ export const resetTicketMocks = () => {
 };
 
 export const ticketHandlers = [
+  http.get('*/api/tickets', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q') ?? '';
+    const status = url.searchParams.get('status') ?? '';
+    const priority = url.searchParams.get('priority') ?? '';
+
+    let items = mockTicketList;
+
+    if (status) {
+      items = items.filter((t) => t.status === status);
+    }
+    if (priority) {
+      items = items.filter((t) => t.priority === priority);
+    }
+    if (q.trim()) {
+      const lower = q.trim().toLowerCase();
+      items = items.filter(
+        (t) =>
+          t.title.toLowerCase().includes(lower) ||
+          t.description.toLowerCase().includes(lower) ||
+          t.ticket_number.toLowerCase().includes(lower)
+      );
+    }
+
+    return HttpResponse.json({ items, total: items.length });
+  }),
   http.get('*/api/tickets/:id', () => {
     return HttpResponse.json(currentTicket);
   }),

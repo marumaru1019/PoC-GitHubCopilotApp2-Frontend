@@ -1,3 +1,4 @@
+// Created-By: GitHub Copilot
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +13,7 @@ import { Ticket, PaginatedResponse } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useDebouncedValue } from '@/lib/hooks/use-debounced-value';
 
 const statusLabels: Record<string, string> = {
   NEW: '新規',
@@ -48,13 +50,16 @@ export default function TicketsPage() {
   const router = useRouter();
   const [status, setStatus] = useState<string>('');
   const [priority, setPriority] = useState<string>('');
+  const [q, setQ] = useState<string>('');
+  const debouncedQ = useDebouncedValue(q, 300);
   
   const { data, isLoading, error } = useQuery({
-    queryKey: ['tickets', status, priority],
+    queryKey: ['tickets', status, priority, debouncedQ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (status) params.append('status', status);
       if (priority) params.append('priority', priority);
+      if (debouncedQ.trim()) params.append('q', debouncedQ.trim());
       
       const response = await apiClient.get<PaginatedResponse<Ticket>>(`/api/tickets?${params}`);
       return response.data;
@@ -82,10 +87,23 @@ export default function TicketsPage() {
 
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2 md:col-span-1">
+                <label htmlFor="keyword-search" className="text-sm font-medium">キーワード検索</label>
+                <input
+                  id="keyword-search"
+                  type="search"
+                  maxLength={100}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="タイトル・本文・チケット番号で検索"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">ステータス</label>
+                <label htmlFor="status-filter" className="text-sm font-medium">ステータス</label>
                 <select
+                  id="status-filter"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -99,8 +117,9 @@ export default function TicketsPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">優先度</label>
+                <label htmlFor="priority-filter" className="text-sm font-medium">優先度</label>
                 <select
+                  id="priority-filter"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -141,7 +160,11 @@ export default function TicketsPage() {
               <svg className="w-12 h-12 text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="text-muted-foreground">チケットが見つかりませんでした</p>
+              {debouncedQ.trim() ? (
+                <p className="text-muted-foreground">『{debouncedQ.trim()}』に一致するチケットが見つかりませんでした</p>
+              ) : (
+                <p className="text-muted-foreground">チケットが見つかりませんでした</p>
+              )}
             </CardContent>
           </Card>
         )}
