@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import TicketsPage from '@/app/tickets/page';
 import { renderWithProviders } from '@/__tests__/test-utils';
-import { mockOperator } from '@/mocks/data/fixtures';
+import { mockOperator, mockTicketList } from '@/mocks/data/fixtures';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
 
@@ -122,9 +122,7 @@ describe('TicketsPage – キーワード検索', () => {
         capturedUrls.push(request.url);
         const url = new URL(request.url);
         const q = url.searchParams.get('q') ?? '';
-        const items = q
-          ? [{ id: 1, ticket_number: 'TKT-0001', title: 'プリンター故障', description: '', status: 'NEW', priority: 'MEDIUM', category_id: 1, category: null, requester_id: 1, requester: null, assignee_id: null, assignee: null, assigned_team_id: null, assigned_team: null, tags: [], first_response_at: null, resolved_at: null, closed_at: null, waiting_customer_started_at: null, total_waiting_customer_duration: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }]
-          : [];
+        const items = q ? [mockTicketList[1]] : [];
         return HttpResponse.json({ items, total: items.length, page: 1, size: 20 });
       })
     );
@@ -136,7 +134,7 @@ describe('TicketsPage – キーワード検索', () => {
     await user.type(searchInput, 'プリンター');
 
     await act(async () => { vi.advanceTimersByTime(300); });
-    await screen.findByText('プリンター故障');
+    await screen.findByText(mockTicketList[1].title);
 
     // クリアボタンをクリック
     const clearButton = screen.getByRole('button', { name: '検索をクリア' });
